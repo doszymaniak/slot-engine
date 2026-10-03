@@ -19,6 +19,12 @@ def create_reservation(session, user_id, resource_id, start, end):
     session.commit()
     return reservation
 
+def delete_reservation(session, reservation_id):
+    reservation = session.query(Reservation).filter(Reservation.id == reservation_id).first()
+    if not reservation:
+        raise ValueError("Reservation does not exist")
+    session.delete(reservation)
+    session.commit()
 
 def is_available(session,resource_id, start, end):
     overlapping = session.query(Reservation).filter(
@@ -28,3 +34,6 @@ def is_available(session,resource_id, start, end):
     ).first()
 
     return overlapping is None
+
+def list_reservations(session):
+    return session.query(Reservation).all()

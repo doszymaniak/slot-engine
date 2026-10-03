@@ -19,6 +19,7 @@ class Reservation(Base):
     id = Column(Integer, primary_key=True)
     start = Column(DateTime, nullable=False)
     end = Column(DateTime, nullable=False)
+    reservation_id = Column(Integer, ForeignKey("reservations.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     resource_id = Column(Integer, ForeignKey("resources.id"), nullable=False)
     user = relationship("User", back_populates="reservations")
