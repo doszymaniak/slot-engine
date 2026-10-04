@@ -15,16 +15,29 @@ def create_reservation(session, user_id, resource_id, start, end):
         raise ValueError("Resource is not available for the given time slot")
     
     reservation = Reservation(user_id=user_id, resource_id=resource_id, start=start, end=end)
-    session.add(reservation)
-    session.commit()
+    try:
+        session.add(reservation)
+        session.commit()
+        session.refresh(reservation)
+    except Exception as e:
+        session.rollback()
+        raise e
+    
     return reservation
+
 
 def delete_reservation(session, reservation_id):
     reservation = session.query(Reservation).filter(Reservation.id == reservation_id).first()
     if not reservation:
         raise ValueError("Reservation does not exist")
-    session.delete(reservation)
-    session.commit()
+    try:
+        session.delete(reservation)
+        session.commit()
+        session.refresh(reservation)
+    except Exception as e:
+        session.rollback()
+        raise e 
+
 
 def is_available(session,resource_id, start, end):
     overlapping = session.query(Reservation).filter(
@@ -34,6 +47,7 @@ def is_available(session,resource_id, start, end):
     ).first()
 
     return overlapping is None
+
 
 def list_reservations(session):
     return session.query(Reservation).all()
