@@ -16,7 +16,7 @@ def create_user(session, name):
 
 def delete_user(session, user_id):
     user = session.query(User).filter(User.id == user_id).first()
-    if not user:
+    if user is None:
         raise ValueError("User does not exist")
     reservation = session.query(Reservation).filter(Reservation.user_id == user_id).first()
     if reservation:
@@ -31,3 +31,19 @@ def delete_user(session, user_id):
 
 def list_users(session):
     return session.query(User).all()
+
+
+def update_user(session, user_id, name):
+    user = session.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise ValueError("User does not exist")
+
+    user.name = name
+    try:
+        session.commit()
+        session.refresh(user)
+    except Exception as e:
+        session.rollback()
+        raise e
+    
+    return user

@@ -11,7 +11,7 @@ def create_reservation(session, user_id, resource_id, start, end):
     if not session.query(Resource).filter(Resource.id == resource_id).first():
         raise ValueError("Resource does not exist")
     
-    if not is_available(session, resource_id, start, end):
+    if not is_available(session, None, resource_id, start, end):
         raise ValueError("Resource is not available for the given time slot")
     
     reservation = Reservation(user_id=user_id, resource_id=resource_id, start=start, end=end)
@@ -28,7 +28,7 @@ def create_reservation(session, user_id, resource_id, start, end):
 
 def delete_reservation(session, reservation_id):
     reservation = session.query(Reservation).filter(Reservation.id == reservation_id).first()
-    if not reservation:
+    if reservation is None:
         raise ValueError("Reservation does not exist")
     try:
         session.delete(reservation)
@@ -38,8 +38,9 @@ def delete_reservation(session, reservation_id):
         raise e 
 
 
-def is_available(session,resource_id, start, end):
+def is_available(session, reservation_id, resource_id, start, end):
     overlapping = session.query(Reservation).filter(
+        Reservation.id != reservation_id,
         Reservation.resource_id == resource_id,
         Reservation.start < end,
         Reservation.end > start
@@ -50,3 +51,26 @@ def is_available(session,resource_id, start, end):
 
 def list_reservations(session):
     return session.query(Reservation).all()
+
+
+def update_reservation(session, reservation_id, start, end):
+    reservation = session.query(Reservation).filter(Reservation.id == reservation_id).first()
+    if reservation is None:
+        raise ValueError("Reservation does not exist")
+
+    if start >= end:
+        raise ValueError("Start time must be before end time")
+
+    if not is_available(session, reservation_id, reservation.resource_id, start, end):
+        raise ValueError("Resource is not available for the given time slot")
+
+    reservation.start = start
+    reservation.end = end
+    try:
+        session.commit()
+        session.refresh(reservation)
+    except Exception as e:
+        session.rollback()
+        raise e
+    
+    return reservation

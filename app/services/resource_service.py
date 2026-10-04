@@ -16,7 +16,7 @@ def create_resource(session, name):
 
 def delete_resource(session, resource_id):
     resource = session.query(Resource).filter(Resource.id == resource_id).first()
-    if not resource:
+    if resource is None:
         raise ValueError("Resource does not exist")
     reservation = session.query(Reservation).filter(Reservation.resource_id == resource_id).first()
     if reservation:
@@ -31,3 +31,19 @@ def delete_resource(session, resource_id):
 
 def list_resources(session):
     return session.query(Resource).all()
+
+
+def update_resource(session, resource_id, name):
+    resource = session.query(Resource).filter(Resource.id == resource_id).first()
+    if resource is None:
+        raise ValueError("Resource does not exist")
+
+    resource.name = name
+    try:
+        session.commit()
+        session.refresh(resource)
+    except Exception as e:
+        session.rollback()
+        raise e
+    
+    return resource
