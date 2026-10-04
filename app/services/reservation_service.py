@@ -33,7 +33,6 @@ def delete_reservation(session, reservation_id):
     try:
         session.delete(reservation)
         session.commit()
-        session.refresh(reservation)
     except Exception as e:
         session.rollback()
         raise e 

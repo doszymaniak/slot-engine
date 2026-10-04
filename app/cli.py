@@ -30,14 +30,14 @@ def main():
 
     try:
         if args.add_user:
-            if not args.user_name:
+            if args.user_name is None:
                 print("User name is required to add a user.")
                 return
             user = user_service.create_user(session, args.user_name)
             print(f"User created: {user.id}, {user.name}")
 
         elif args.remove_user:
-            if not args.user_id:
+            if args.user_id is None:
                 print("User ID is required to remove a user.")
                 return
             try:
@@ -55,14 +55,14 @@ def main():
                     print(f"User ID: {user.id}, Name: {user.name}")
 
         elif args.add_resource:
-            if not args.resource_name:
+            if args.resource_name is None:
                 print("Resource name is required to add a resource.")
                 return
             resource = resource_service.create_resource(session, args.resource_name)
             print(f"Resource created: {resource.id}, {resource.name}")
 
         elif args.remove_resource:
-            if not args.resource_id:
+            if args.resource_id is None:
                 print("Resource ID is required to remove a resource.")
                 return
             try:
@@ -80,7 +80,7 @@ def main():
                     print(f"Resource ID: {resource.id}, Name: {resource.name}")
 
         elif args.reserve_slot:
-            if not all([args.user_id, args.resource_id, args.start_date, args.end_date]):
+            if any(value is None for value in [args.user_id, args.resource_id, args.start_date, args.end_date]):
                 print("User ID, Resource ID, Start Date, and End Date are required to reserve a slot.")
                 return
             try:
@@ -92,7 +92,7 @@ def main():
                 print(e)
 
         elif args.release_slot:
-            if not args.reservation_id:
+            if args.reservation_id is None:
                 print("Reservation ID is required to release a slot.")
                 return
             try:
