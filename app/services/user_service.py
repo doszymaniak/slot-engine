@@ -2,14 +2,18 @@ from app.models import User, Reservation
 
 
 def create_user(session, name):
+    name = (name or "").strip()
+    if not name:
+        raise ValueError("Name cannot be empty")
     user = User(name=name)
+    
     try:
         session.add(user)
         session.commit()
         session.refresh(user)
-    except Exception as e:
+    except Exception:
         session.rollback()
-        raise e
+        raise
     
     return user
 
@@ -24,9 +28,9 @@ def delete_user(session, user_id):
     try:
         session.delete(user)
         session.commit()
-    except Exception as e:
+    except Exception:
         session.rollback()
-        raise e
+        raise
 
 
 def list_users(session):
@@ -38,12 +42,17 @@ def update_user(session, user_id, name):
     if user is None:
         raise ValueError("User does not exist")
 
+
+    name = (name or "").strip()
+    if not name:
+        raise ValueError("Name cannot be empty")
     user.name = name
+
     try:
         session.commit()
         session.refresh(user)
-    except Exception as e:
+    except Exception:
         session.rollback()
-        raise e
+        raise
     
     return user

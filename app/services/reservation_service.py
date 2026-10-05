@@ -2,8 +2,7 @@ from app.models import Reservation, Resource, User
 
 
 def create_reservation(session, user_id, resource_id, start, end):
-    if start >= end:
-        raise ValueError("Start time must be before end time")
+    validate_date(start, end)
     
     if not session.query(User).filter(User.id == user_id).first():
         raise ValueError("User does not exist")
@@ -19,9 +18,9 @@ def create_reservation(session, user_id, resource_id, start, end):
         session.add(reservation)
         session.commit()
         session.refresh(reservation)
-    except Exception as e:
+    except Exception:
         session.rollback()
-        raise e
+        raise
     
     return reservation
 
@@ -33,20 +32,22 @@ def delete_reservation(session, reservation_id):
     try:
         session.delete(reservation)
         session.commit()
-    except Exception as e:
+    except Exception:
         session.rollback()
-        raise e 
+        raise
 
 
 def is_available(session, reservation_id, resource_id, start, end):
-    overlapping = session.query(Reservation).filter(
-        Reservation.id != reservation_id,
+    query = session.query(Reservation).filter(
         Reservation.resource_id == resource_id,
         Reservation.start < end,
         Reservation.end > start
-    ).first()
+    )
 
-    return overlapping is None
+    if reservation_id is not None:
+        query = query.filter(Reservation.id != reservation_id)
+
+    return query.first() is None
 
 
 def list_reservations(session):
@@ -58,8 +59,7 @@ def update_reservation(session, reservation_id, start, end):
     if reservation is None:
         raise ValueError("Reservation does not exist")
 
-    if start >= end:
-        raise ValueError("Start time must be before end time")
+    validate_date(start, end)
 
     if not is_available(session, reservation_id, reservation.resource_id, start, end):
         raise ValueError("Resource is not available for the given time slot")
@@ -74,3 +74,8 @@ def update_reservation(session, reservation_id, start, end):
         raise e
     
     return reservation
+
+
+def validate_date(start, end):
+    if start >= end:
+        raise ValueError("Start time must be before end time")

@@ -2,14 +2,18 @@ from app.models import Resource, Reservation
 
 
 def create_resource(session, name):
+    name = (name or "").strip()
+    if not name:
+        raise ValueError("Name cannot be empty")
     resource = Resource(name=name)
+
     try:
         session.add(resource)
         session.commit()
         session.refresh(resource)
-    except Exception as e:
+    except Exception:
         session.rollback()
-        raise e
+        raise
     
     return resource
 
@@ -24,9 +28,9 @@ def delete_resource(session, resource_id):
     try:
         session.delete(resource)
         session.commit()
-    except Exception as e:
+    except Exception:
         session.rollback()
-        raise e
+        raise
 
 
 def list_resources(session):
@@ -38,12 +42,16 @@ def update_resource(session, resource_id, name):
     if resource is None:
         raise ValueError("Resource does not exist")
 
+    name = (name or "").strip()
+    if not name:
+        raise ValueError("Name cannot be empty")
     resource.name = name
+    
     try:
         session.commit()
         session.refresh(resource)
-    except Exception as e:
+    except Exception:
         session.rollback()
-        raise e
+        raise
     
     return resource
