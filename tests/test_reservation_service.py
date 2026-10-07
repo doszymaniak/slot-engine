@@ -204,3 +204,70 @@ def test_update_reservation_failure_three(session):
             datetime(2026, 1, 1, 11, 30),
             datetime(2026, 1, 1, 12, 30),
         )
+
+
+def test_reservation_partial_overlap_failure(session):
+    user = user_service.create_user(session, "Ania")
+    resource = resource_service.create_resource(session, "Room 67")
+    reservation_service.create_reservation(
+        session,
+        user.id,
+        resource.id,
+        datetime(2026, 1, 1, 9, 0),
+        datetime(2026, 1, 1, 10, 0),
+    )
+
+    with pytest.raises(ValueError, match="Resource is not available for the given time slot"):
+        reservation_service.create_reservation(
+            session,
+            user.id,
+            resource.id,
+            datetime(2026, 1, 1, 9, 30),
+            datetime(2026, 1, 1, 10, 30),
+        )
+
+
+def test_reservation_adjacent_slots_success(session):
+    user = user_service.create_user(session, "Ania")
+    resource = resource_service.create_resource(session, "Room 67")
+    reservation_service.create_reservation(
+        session,
+        user.id,
+        resource.id,
+        datetime(2026, 1, 1, 9, 0),
+        datetime(2026, 1, 1, 10, 0),
+    )
+
+    reservation = reservation_service.create_reservation(
+        session,
+        user.id,
+        resource.id,
+        datetime(2026, 1, 1, 10, 0),
+        datetime(2026, 1, 1, 11, 0),
+    )
+
+    assert reservation.id is not None
+
+
+def test_reservation_same_time_different_resource_success(session):
+    user = user_service.create_user(session, "Ania")
+    first_resource = resource_service.create_resource(session, "Room 67")
+    second_resource = resource_service.create_resource(session, "Room 68")
+    reservation_service.create_reservation(
+        session,
+        user.id,
+        first_resource.id,
+        datetime(2026, 1, 1, 9, 0),
+        datetime(2026, 1, 1, 10, 0),
+    )
+
+    reservation = reservation_service.create_reservation(
+        session,
+        user.id,
+        second_resource.id,
+        datetime(2026, 1, 1, 9, 0),
+        datetime(2026, 1, 1, 10, 0),
+    )
+
+    assert reservation.id is not None
+    assert reservation.resource_id == second_resource.id
