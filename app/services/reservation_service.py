@@ -1,4 +1,5 @@
 from app.models import Reservation, Resource, User
+from datetime import datetime
 
 
 def create_reservation(session, user_id, resource_id, start, end):
@@ -79,3 +80,8 @@ def update_reservation(session, reservation_id, start, end):
 def validate_date(start, end):
     if start >= end:
         raise ValueError("Start time must be before end time")
+
+
+def convert_string_to_date(date_str):
+    date_format = '%Y-%m-%d %H:%M:%S'
+    return datetime.strptime(date_str, date_format)

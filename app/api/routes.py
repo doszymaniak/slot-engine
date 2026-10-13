@@ -1,4 +1,4 @@
-from app.services import user_service, resource_service
+from app.services import user_service, resource_service, reservation_service
 from flask import request, Flask, jsonify
 from app.database import Session, Base, engine
 
@@ -149,6 +149,124 @@ def update_resource(resource_id):
         return jsonify({
             "id": resource.id,
             "name": resource.name
+        }), 200
+    except (KeyError, TypeError, ValueError) as error:
+        return jsonify({"error": str(error)}), 400
+    finally:
+        session.close()
+
+
+# RESERVATION API
+@app.route('/reservation/', methods=["POST"])
+def create_reservation():
+    data = request.get_json() or {}
+    user_id = data.get("user_id")
+    resource_id = data.get("resource_id")
+    
+    start = data.get("start")
+    end = data.get("end")
+
+    if user_id is None:
+        return jsonify({"error": "User id is required"}), 400
+
+    if resource_id is None:
+        return jsonify({"error": "Resource id is required"}), 400
+
+    if start is None:
+        return jsonify({"error": "Start date is required"}), 400
+
+    if end is None:
+        return jsonify({"error": "End date is required"}), 400
+
+    try:
+        start = reservation_service.convert_string_to_date(start)
+        end = reservation_service.convert_string_to_date(end)
+    except (TypeError, ValueError):
+        return jsonify({
+            "error": "Start and end must use YYYY-MM-DD HH:MM:SS format"
+        }), 400
+
+    session = Session()
+    try:
+        reservation = reservation_service.create_reservation(session, user_id, resource_id, start, end)
+        return jsonify({
+            "id": reservation.id,
+            "user_id": reservation.user_id,
+            "resource_id": reservation.resource_id,
+            "start": reservation.start,
+            "end": reservation.end
+        }), 201
+    except (KeyError, TypeError, ValueError) as error:
+        return jsonify({"error": str(error)}), 400
+    finally:
+        session.close()
+
+
+@app.route('/reservation/', methods=["DELETE"])
+def delete_reservation():
+    data = request.get_json() or {}
+
+    reservation_id = data.get("reservation_id")
+
+    if reservation_id is None:
+        return jsonify({"error": "Reservation id is required"}), 400
+
+    session = Session()
+    try:
+        reservation_service.delete_reservation(session, reservation_id)
+        return jsonify({"message": "Reservation deleted successfully"}), 200
+    except (KeyError, TypeError, ValueError) as error:
+        return jsonify({"error": str(error)}), 400
+    finally:
+        session.close()
+
+
+@app.route('/reservation/', methods=["GET"])
+def list_reservations():
+    session = Session()
+    try:
+        reservations = reservation_service.list_reservations(session)
+        return jsonify([{
+            "id": reservation.id,
+            "user_id": reservation.user_id,
+            "resource_id": reservation.resource_id,
+            "start": reservation.start,
+            "end": reservation.end
+        } for reservation in reservations]), 200
+    finally:
+        session.close()
+
+
+@app.route('/reservation/<int:reservation_id>', methods=["PUT", "PATCH"])
+def update_reservation(reservation_id):
+    data = request.get_json() or {}
+
+    start = data.get("start")
+    end = data.get("end")
+
+    if start is None:
+        return jsonify({"error": "Start date is required"}), 400
+
+    if end is None:
+        return jsonify({"error": "End date is required"}), 400
+
+    try:
+        start = reservation_service.convert_string_to_date(start)
+        end = reservation_service.convert_string_to_date(end)
+    except (TypeError, ValueError):
+        return jsonify({
+            "error": "Start and end must use YYYY-MM-DD HH:MM:SS format"
+        }), 400
+
+    session = Session()
+    try:
+        reservation = reservation_service.update_reservation(session, reservation_id, start, end)
+        return jsonify({
+            "id": reservation.id,
+            "user_id": reservation.user_id,
+            "resource_id": reservation.resource_id,
+            "start": reservation.start,
+            "end": reservation.end
         }), 200
     except (KeyError, TypeError, ValueError) as error:
         return jsonify({"error": str(error)}), 400
