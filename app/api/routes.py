@@ -110,7 +110,7 @@ def delete_resource():
     resource_id = data.get("id")
 
     if resource_id is None:
-        return jsonify({"error": "Resoure id is required"}), 400
+        return jsonify({"error": "Resource id is required"}), 400
 
     session = Session()
     try:
