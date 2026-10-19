@@ -1,9 +1,6 @@
 from app.services import user_service, resource_service, reservation_service
 from flask import request, Flask, jsonify
-from app.database import Session, Base, engine
-
-
-Base.metadata.create_all(bind=engine)
+from app.database import Session
 
 app = Flask(__name__)
 
