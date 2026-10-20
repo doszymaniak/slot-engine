@@ -3,6 +3,7 @@ import pytest
 from sqlalchemy.orm import sessionmaker
 from app.api import routes
 from app.services import reservation_service, resource_service, user_service
+from app.api.routes import create_app
 
 
 def configure_api_session(session, monkeypatch):
@@ -11,6 +12,8 @@ def configure_api_session(session, monkeypatch):
         "Session",
         sessionmaker(bind=session.get_bind()),
     )
+    app = create_app()
+    return app.test_client()
 
 
 def create_api_entities(session, monkeypatch):
@@ -18,8 +21,8 @@ def create_api_entities(session, monkeypatch):
     resource = resource_service.create_resource(session, "Room 67")
     user_id = user.id
     resource_id = resource.id
-    configure_api_session(session, monkeypatch)
-    return routes.app.test_client(), user_id, resource_id
+    client = configure_api_session(session, monkeypatch)
+    return client, user_id, resource_id
 
 
 def test_create_reservation_success(session, monkeypatch):
@@ -85,9 +88,9 @@ def test_create_overlapping_reservation_returns_bad_request(session, monkeypatch
     ],
 )
 def test_create_reservation_rejects_missing_fields(session, monkeypatch, payload, message):
-    configure_api_session(session, monkeypatch)
+    client = configure_api_session(session, monkeypatch)
 
-    response = routes.app.test_client().post("/reservation/", json=payload)
+    response = client.post("/reservation/", json=payload)
 
     assert response.status_code == 400
     assert response.json == {"error": message}
@@ -154,9 +157,9 @@ def test_create_reservation_rejects_unknown_entities(
         user_id = 999
     else:
         resource_id = 999
-    configure_api_session(session, monkeypatch)
+    client = configure_api_session(session, monkeypatch)
 
-    response = routes.app.test_client().post(
+    response = client.post(
         "/reservation/",
         json={
             "user_id": user_id,
@@ -279,9 +282,9 @@ def test_update_reservation_rejects_invalid_time_range(
 
 
 def test_update_reservation_rejects_missing_reservation(session, monkeypatch):
-    configure_api_session(session, monkeypatch)
+    client = configure_api_session(session, monkeypatch)
 
-    response = routes.app.test_client().put(
+    response = client.put(
         "/reservation/999",
         json={"start": "2026-01-01 10:00:00", "end": "2026-01-01 11:00:00"},
     )
@@ -309,9 +312,9 @@ def test_delete_reservation_success(session, monkeypatch):
 
 
 def test_delete_reservation_rejects_missing_reservation(session, monkeypatch):
-    configure_api_session(session, monkeypatch)
+    client = configure_api_session(session, monkeypatch)
 
-    response = routes.app.test_client().delete(
+    response = client.delete(
         "/reservation/",
         json={"reservation_id": 999},
     )

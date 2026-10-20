@@ -1,12 +1,19 @@
 from app.services import user_service, resource_service, reservation_service
-from flask import request, Flask, jsonify
+from flask import request, Flask, jsonify, Blueprint
 from app.database import Session
 
-app = Flask(__name__)
+
+blp = Blueprint("api", __name__)
+
+
+def create_app():
+    app = Flask(__name__)
+    app.register_blueprint(blp)
+    return app
 
 
 # USER API
-@app.route('/user/', methods=["POST"])
+@blp.route('/user/', methods=["POST"])
 def create_user():
     data = request.get_json() or {}
     name = data.get("name")
@@ -27,7 +34,7 @@ def create_user():
         session.close()
 
 
-@app.route('/user/', methods=["DELETE"])
+@blp.route('/user/', methods=["DELETE"])
 def delete_user():
     data = request.get_json() or {}
     user_id = data.get("id")
@@ -45,7 +52,7 @@ def delete_user():
         session.close()
 
 
-@app.route('/user/', methods=["GET"])
+@blp.route('/user/', methods=["GET"])
 def list_users():
     session = Session()
     try:
@@ -58,7 +65,7 @@ def list_users():
         session.close()
 
 
-@app.route('/user/<int:user_id>', methods=["PUT", "PATCH"])
+@blp.route('/user/<int:user_id>', methods=["PUT", "PATCH"])
 def update_user(user_id):
     data = request.get_json() or {}
     name = data.get("name")
@@ -80,7 +87,7 @@ def update_user(user_id):
 
 
 # RESOURCE API
-@app.route('/resource/', methods=["POST"])
+@blp.route('/resource/', methods=["POST"])
 def create_resource():
     data = request.get_json() or {}
     name = data.get("name")
@@ -101,7 +108,7 @@ def create_resource():
         session.close()
 
 
-@app.route('/resource/', methods=["DELETE"])
+@blp.route('/resource/', methods=["DELETE"])
 def delete_resource():
     data = request.get_json() or {}
     resource_id = data.get("id")
@@ -119,7 +126,7 @@ def delete_resource():
         session.close()
 
 
-@app.route('/resource/', methods=["GET"])
+@blp.route('/resource/', methods=["GET"])
 def list_resources():
     session = Session()
     try:
@@ -132,7 +139,7 @@ def list_resources():
         session.close()
 
 
-@app.route('/resource/<int:resource_id>', methods=["PUT", "PATCH"])
+@blp.route('/resource/<int:resource_id>', methods=["PUT", "PATCH"])
 def update_resource(resource_id):
     data = request.get_json() or {}
     name = data.get("name")
@@ -154,7 +161,7 @@ def update_resource(resource_id):
 
 
 # RESERVATION API
-@app.route('/reservation/', methods=["POST"])
+@blp.route('/reservation/', methods=["POST"])
 def create_reservation():
     data = request.get_json() or {}
     user_id = data.get("user_id")
@@ -199,7 +206,7 @@ def create_reservation():
         session.close()
 
 
-@app.route('/reservation/', methods=["DELETE"])
+@blp.route('/reservation/', methods=["DELETE"])
 def delete_reservation():
     data = request.get_json() or {}
 
@@ -218,7 +225,7 @@ def delete_reservation():
         session.close()
 
 
-@app.route('/reservation/', methods=["GET"])
+@blp.route('/reservation/', methods=["GET"])
 def list_reservations():
     session = Session()
     try:
@@ -234,7 +241,7 @@ def list_reservations():
         session.close()
 
 
-@app.route('/reservation/<int:reservation_id>', methods=["PUT", "PATCH"])
+@blp.route('/reservation/<int:reservation_id>', methods=["PUT", "PATCH"])
 def update_reservation(reservation_id):
     data = request.get_json() or {}
 

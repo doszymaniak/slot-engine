@@ -2,8 +2,8 @@ from datetime import datetime
 
 import pytest
 from sqlalchemy.orm import sessionmaker
-
 from app.api import routes
+from app.api.routes import create_app
 from app.services import reservation_service, resource_service, user_service
 
 
@@ -13,7 +13,8 @@ def configure_api(session, monkeypatch):
         "Session",
         sessionmaker(bind=session.get_bind()),
     )
-    return routes.app.test_client()
+    app = create_app()
+    return app.test_client()
 
 
 @pytest.mark.parametrize("name", ["Ania", " Ania "])
