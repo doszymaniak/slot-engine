@@ -1,5 +1,5 @@
 from app.services import user_service, resource_service, reservation_service
-from flask import request, Flask, jsonify, Blueprint
+from flask import request, Flask, jsonify, Blueprint, g
 from app.database import Session
 
 
@@ -9,7 +9,20 @@ blp = Blueprint("api", __name__)
 def create_app():
     app = Flask(__name__)
     app.register_blueprint(blp)
+
+    @app.teardown_appcontext
+    def close_session(error=None):
+        session = g.pop("session", None)
+        if session is not None:
+            session.close()
+
     return app
+
+
+def get_session():
+    if "session" not in g:
+        g.session = Session()
+    return g.session
 
 
 # USER API
@@ -21,7 +34,7 @@ def create_user():
     if not isinstance(name, str) or not name.strip():
         return jsonify({"error": "Name cannot be empty"}), 400
 
-    session = Session()
+    session = get_session()
     try:
         user = user_service.create_user(session, name)
         return jsonify({
@@ -30,8 +43,6 @@ def create_user():
         }), 201
     except (KeyError, TypeError, ValueError) as error:
         return jsonify({"error": str(error)}), 400
-    finally:
-        session.close()
 
 
 @blp.route('/user/', methods=["DELETE"])
@@ -42,27 +53,22 @@ def delete_user():
     if user_id is None:
         return jsonify({"error": "User id is required"}), 400
 
-    session = Session()
+    session = get_session()
     try:
         user_service.delete_user(session, user_id)
         return jsonify({"message": "User deleted successfully"}), 200
     except (KeyError, TypeError, ValueError) as error:
         return jsonify({"error": str(error)}), 400
-    finally:
-        session.close()
 
 
 @blp.route('/user/', methods=["GET"])
 def list_users():
-    session = Session()
-    try:
-        users = user_service.list_users(session)
-        return jsonify([
-            {"id": user.id, "name": user.name}
-            for user in users
-        ]), 200
-    finally:
-        session.close()
+    session = get_session()
+    users = user_service.list_users(session)
+    return jsonify([
+        {"id": user.id, "name": user.name}
+        for user in users
+    ]), 200
 
 
 @blp.route('/user/<int:user_id>', methods=["PUT", "PATCH"])
@@ -73,7 +79,7 @@ def update_user(user_id):
     if not isinstance(name, str) or not name.strip():
         return jsonify({"error": "Name cannot be empty"}), 400
 
-    session = Session()
+    session = get_session()
     try:
         user = user_service.update_user(session, user_id, name)
         return jsonify({
@@ -82,8 +88,6 @@ def update_user(user_id):
         }), 200
     except (KeyError, TypeError, ValueError) as error:
         return jsonify({"error": str(error)}), 400
-    finally:
-        session.close()
 
 
 # RESOURCE API
@@ -95,7 +99,7 @@ def create_resource():
     if not isinstance(name, str) or not name.strip():
         return jsonify({"error": "Name cannot be empty"}), 400
 
-    session = Session()
+    session = get_session()
     try:
         resource = resource_service.create_resource(session, name)
         return jsonify({
@@ -104,8 +108,6 @@ def create_resource():
         }), 201
     except (KeyError, TypeError, ValueError) as error:
         return jsonify({"error": str(error)}), 400
-    finally:
-        session.close()
 
 
 @blp.route('/resource/', methods=["DELETE"])
@@ -116,27 +118,22 @@ def delete_resource():
     if resource_id is None:
         return jsonify({"error": "Resource id is required"}), 400
 
-    session = Session()
+    session = get_session()
     try:
         resource_service.delete_resource(session, resource_id)
         return jsonify({"message": "Resource deleted successfully"}), 200
     except (KeyError, TypeError, ValueError) as error:
         return jsonify({"error": str(error)}), 400
-    finally:
-        session.close()
 
 
 @blp.route('/resource/', methods=["GET"])
 def list_resources():
-    session = Session()
-    try:
-        resources = resource_service.list_resources(session)
-        return jsonify([
-            {"id": resource.id, "name": resource.name}
-            for resource in resources
-        ]), 200
-    finally:
-        session.close()
+    session = get_session()
+    resources = resource_service.list_resources(session)
+    return jsonify([
+        {"id": resource.id, "name": resource.name}
+        for resource in resources
+    ]), 200
 
 
 @blp.route('/resource/<int:resource_id>', methods=["PUT", "PATCH"])
@@ -147,7 +144,7 @@ def update_resource(resource_id):
     if not isinstance(name, str) or not name.strip():
         return jsonify({"error": "Name cannot be empty"}), 400
 
-    session = Session()
+    session = get_session()
     try:
         resource = resource_service.update_resource(session, resource_id, name)
         return jsonify({
@@ -156,8 +153,6 @@ def update_resource(resource_id):
         }), 200
     except (KeyError, TypeError, ValueError) as error:
         return jsonify({"error": str(error)}), 400
-    finally:
-        session.close()
 
 
 # RESERVATION API
@@ -190,7 +185,7 @@ def create_reservation():
             "error": "Start and end must use YYYY-MM-DD HH:MM:SS format"
         }), 400
 
-    session = Session()
+    session = get_session()
     try:
         reservation = reservation_service.create_reservation(session, user_id, resource_id, start, end)
         return jsonify({
@@ -202,8 +197,6 @@ def create_reservation():
         }), 201
     except (KeyError, TypeError, ValueError) as error:
         return jsonify({"error": str(error)}), 400
-    finally:
-        session.close()
 
 
 @blp.route('/reservation/', methods=["DELETE"])
@@ -215,30 +208,25 @@ def delete_reservation():
     if reservation_id is None:
         return jsonify({"error": "Reservation id is required"}), 400
 
-    session = Session()
+    session = get_session()
     try:
         reservation_service.delete_reservation(session, reservation_id)
         return jsonify({"message": "Reservation deleted successfully"}), 200
     except (KeyError, TypeError, ValueError) as error:
         return jsonify({"error": str(error)}), 400
-    finally:
-        session.close()
 
 
 @blp.route('/reservation/', methods=["GET"])
 def list_reservations():
-    session = Session()
-    try:
-        reservations = reservation_service.list_reservations(session)
-        return jsonify([{
-            "id": reservation.id,
-            "user_id": reservation.user_id,
-            "resource_id": reservation.resource_id,
-            "start": reservation.start,
-            "end": reservation.end
-        } for reservation in reservations]), 200
-    finally:
-        session.close()
+    session = get_session()
+    reservations = reservation_service.list_reservations(session)
+    return jsonify([{
+        "id": reservation.id,
+        "user_id": reservation.user_id,
+        "resource_id": reservation.resource_id,
+        "start": reservation.start,
+        "end": reservation.end
+    } for reservation in reservations]), 200
 
 
 @blp.route('/reservation/<int:reservation_id>', methods=["PUT", "PATCH"])
@@ -262,7 +250,7 @@ def update_reservation(reservation_id):
             "error": "Start and end must use YYYY-MM-DD HH:MM:SS format"
         }), 400
 
-    session = Session()
+    session = get_session()
     try:
         reservation = reservation_service.update_reservation(session, reservation_id, start, end)
         return jsonify({
@@ -274,5 +262,3 @@ def update_reservation(reservation_id):
         }), 200
     except (KeyError, TypeError, ValueError) as error:
         return jsonify({"error": str(error)}), 400
-    finally:
-        session.close()
