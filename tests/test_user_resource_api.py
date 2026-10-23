@@ -106,25 +106,20 @@ def test_delete_user_success(session, monkeypatch):
     user_id = user.id
     client = configure_api(session, monkeypatch)
 
-    response = client.delete("/user/", json={"id": user_id})
+    response = client.delete(f"/user/{user_id}")
 
     assert response.status_code == 200
     assert response.json == {"message": "User deleted successfully"}
     assert client.get("/user/").json == []
 
 
-@pytest.mark.parametrize(
-    ("payload", "message"),
-    [({}, "User id is required"), ({"id": 999}, "User does not exist")],
-)
-def test_delete_user_rejects_missing_or_unknown_user(
-    session, monkeypatch, payload, message):
+def test_delete_user_rejects_unknown_user(session, monkeypatch):
     client = configure_api(session, monkeypatch)
 
-    response = client.delete("/user/", json=payload)
+    response = client.delete("/user/999")
 
     assert response.status_code == 400
-    assert response.json == {"error": message}
+    assert response.json == {"error": "User does not exist"}
 
 
 def test_delete_user_rejects_user_with_reservations(session, monkeypatch):
@@ -140,7 +135,7 @@ def test_delete_user_rejects_user_with_reservations(session, monkeypatch):
     )
     client = configure_api(session, monkeypatch)
 
-    response = client.delete("/user/", json={"id": user_id})
+    response = client.delete(f"/user/{user_id}")
 
     assert response.status_code == 400
     assert response.json == {

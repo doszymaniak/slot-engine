@@ -45,14 +45,8 @@ def create_user():
         return jsonify({"error": str(error)}), 400
 
 
-@blp.route('/user/', methods=["DELETE"])
-def delete_user():
-    data = request.get_json() or {}
-    user_id = data.get("id")
-
-    if user_id is None:
-        return jsonify({"error": "User id is required"}), 400
-
+@blp.route('/user/<int:user_id>', methods=["DELETE"])
+def delete_user(user_id):
     session = get_session()
     try:
         user_service.delete_user(session, user_id)
