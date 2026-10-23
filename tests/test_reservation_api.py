@@ -33,8 +33,8 @@ def test_create_reservation_success(session, monkeypatch):
         json={
             "user_id": user_id,
             "resource_id": resource_id,
-            "start": "2026-01-01 09:00:00",
-            "end": "2026-01-01 10:00:00",
+            "start": "2026-01-01T09:00:00",
+            "end": "2026-01-01T10:00:00",
         },
     )
 
@@ -42,8 +42,8 @@ def test_create_reservation_success(session, monkeypatch):
     assert response.json["id"] is not None
     assert response.json["user_id"] == user_id
     assert response.json["resource_id"] == resource_id
-    assert response.json["start"] == "Thu, 01 Jan 2026 09:00:00 GMT"
-    assert response.json["end"] == "Thu, 01 Jan 2026 10:00:00 GMT"
+    assert response.json["start"] == "2026-01-01T09:00:00"
+    assert response.json["end"] == "2026-01-01T10:00:00"
 
 
 def test_create_overlapping_reservation_returns_bad_request(session, monkeypatch):
@@ -60,8 +60,8 @@ def test_create_overlapping_reservation_returns_bad_request(session, monkeypatch
         json={
             "user_id": user_id,
             "resource_id": resource_id,
-            "start": "2026-01-01 09:30:00",
-            "end": "2026-01-01 10:30:00",
+            "start": "2026-01-01T09:30:00",
+            "end": "2026-01-01T10:30:00",
         },
     )
 
@@ -81,7 +81,7 @@ def test_create_overlapping_reservation_returns_bad_request(session, monkeypatch
             {
                 "user_id": 1,
                 "resource_id": 1,
-                "start": "2026-01-01 09:00:00",
+                "start": "2026-01-01T09:00:00",
             },
             "End date is required",
         ),
@@ -105,21 +105,21 @@ def test_create_reservation_rejects_malformed_date(session, monkeypatch):
             "user_id": user_id,
             "resource_id": resource_id,
             "start": "not-a-date",
-            "end": "2026-01-01 10:00:00",
+            "end": "2026-01-01T10:00:00",
         },
     )
 
     assert response.status_code == 400
     assert response.json == {
-        "error": "Start and end must use YYYY-MM-DD HH:MM:SS format"
+        "error": "Start and end must use YYYY-MM-DDTHH:MM:SS format"
     }
 
 
 @pytest.mark.parametrize(
     ("start", "end"),
     [
-        ("2026-01-01 09:00:00", "2026-01-01 09:00:00"),
-        ("2026-01-01 10:00:00", "2026-01-01 09:00:00"),
+        ("2026-01-01T09:00:00", "2026-01-01T09:00:00"),
+        ("2026-01-01T10:00:00", "2026-01-01T09:00:00"),
     ],
 )
 def test_create_reservation_rejects_invalid_time_range(
@@ -164,8 +164,8 @@ def test_create_reservation_rejects_unknown_entities(
         json={
             "user_id": user_id,
             "resource_id": resource_id,
-            "start": "2026-01-01 09:00:00",
-            "end": "2026-01-01 10:00:00",
+            "start": "2026-01-01T09:00:00",
+            "end": "2026-01-01T10:00:00",
         },
     )
 
@@ -192,8 +192,8 @@ def test_list_reservations_returns_reservation(session, monkeypatch):
             "id": reservation_id,
             "user_id": user_id,
             "resource_id": resource_id,
-            "start": "Thu, 01 Jan 2026 09:00:00 GMT",
-            "end": "Thu, 01 Jan 2026 10:00:00 GMT",
+            "start": "2026-01-01T09:00:00",
+            "end": "2026-01-01T10:00:00",
         }
     ]
 
@@ -211,7 +211,7 @@ def test_update_reservation_success(session, monkeypatch):
 
     response = client.put(
         f"/reservation/{reservation_id}",
-        json={"start": "2026-01-01 10:00:00", "end": "2026-01-01 11:00:00"},
+        json={"start": "2026-01-01T10:00:00", "end": "2026-01-01T11:00:00"},
     )
 
     assert response.status_code == 200
@@ -219,8 +219,8 @@ def test_update_reservation_success(session, monkeypatch):
         "id": reservation_id,
         "user_id": user_id,
         "resource_id": resource_id,
-        "start": "Thu, 01 Jan 2026 10:00:00 GMT",
-        "end": "Thu, 01 Jan 2026 11:00:00 GMT",
+        "start": "2026-01-01T10:00:00",
+        "end": "2026-01-01T11:00:00",
     }
 
 
@@ -244,7 +244,7 @@ def test_update_reservation_rejects_overlapping_reservation(session, monkeypatch
 
     response = client.put(
         f"/reservation/{reservation_id}",
-        json={"start": "2026-01-01 11:30:00", "end": "2026-01-01 12:30:00"},
+        json={"start": "2026-01-01T11:30:00", "end": "2026-01-01T12:30:00"},
     )
 
     assert response.status_code == 400
@@ -256,8 +256,8 @@ def test_update_reservation_rejects_overlapping_reservation(session, monkeypatch
 @pytest.mark.parametrize(
     ("start", "end"),
     [
-        ("2026-01-01 10:00:00", "2026-01-01 10:00:00"),
-        ("2026-01-01 11:00:00", "2026-01-01 10:00:00"),
+        ("2026-01-01T10:00:00", "2026-01-01T10:00:00"),
+        ("2026-01-01T11:00:00", "2026-01-01T10:00:00"),
     ],
 )
 def test_update_reservation_rejects_invalid_time_range(
@@ -286,7 +286,7 @@ def test_update_reservation_rejects_missing_reservation(session, monkeypatch):
 
     response = client.put(
         "/reservation/999",
-        json={"start": "2026-01-01 10:00:00", "end": "2026-01-01 11:00:00"},
+        json={"start": "2026-01-01T10:00:00", "end": "2026-01-01T11:00:00"},
     )
 
     assert response.status_code == 400

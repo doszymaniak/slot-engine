@@ -182,7 +182,7 @@ def create_reservation():
         end = reservation_service.convert_string_to_date(end)
     except (TypeError, ValueError):
         return jsonify({
-            "error": "Start and end must use YYYY-MM-DD HH:MM:SS format"
+            "error": "Start and end must use YYYY-MM-DDTHH:MM:SS format"
         }), 400
 
     session = get_session()
@@ -192,8 +192,8 @@ def create_reservation():
             "id": reservation.id,
             "user_id": reservation.user_id,
             "resource_id": reservation.resource_id,
-            "start": reservation.start,
-            "end": reservation.end
+            "start": reservation.start.isoformat(),
+            "end": reservation.end.isoformat()
         }), 201
     except (KeyError, TypeError, ValueError) as error:
         return jsonify({"error": str(error)}), 400
@@ -224,8 +224,8 @@ def list_reservations():
         "id": reservation.id,
         "user_id": reservation.user_id,
         "resource_id": reservation.resource_id,
-        "start": reservation.start,
-        "end": reservation.end
+        "start": reservation.start.isoformat(),
+        "end": reservation.end.isoformat()
     } for reservation in reservations]), 200
 
 
@@ -247,7 +247,7 @@ def update_reservation(reservation_id):
         end = reservation_service.convert_string_to_date(end)
     except (TypeError, ValueError):
         return jsonify({
-            "error": "Start and end must use YYYY-MM-DD HH:MM:SS format"
+            "error": "Start and end must use YYYY-MM-DDTHH:MM:SS format"
         }), 400
 
     session = get_session()
@@ -257,8 +257,8 @@ def update_reservation(reservation_id):
             "id": reservation.id,
             "user_id": reservation.user_id,
             "resource_id": reservation.resource_id,
-            "start": reservation.start,
-            "end": reservation.end
+            "start": reservation.start.isoformat(),
+            "end": reservation.end.isoformat()
         }), 200
     except (KeyError, TypeError, ValueError) as error:
         return jsonify({"error": str(error)}), 400

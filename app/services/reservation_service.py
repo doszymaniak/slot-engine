@@ -83,5 +83,4 @@ def validate_date(start, end):
 
 
 def convert_string_to_date(date_str):
-    date_format = '%Y-%m-%d %H:%M:%S'
-    return datetime.strptime(date_str, date_format)
+    return datetime.fromisoformat(date_str)
