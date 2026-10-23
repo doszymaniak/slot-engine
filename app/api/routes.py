@@ -187,15 +187,8 @@ def create_reservation():
         return jsonify({"error": str(error)}), 400
 
 
-@blp.route('/reservation/', methods=["DELETE"])
-def delete_reservation():
-    data = request.get_json() or {}
-
-    reservation_id = data.get("reservation_id")
-
-    if reservation_id is None:
-        return jsonify({"error": "Reservation id is required"}), 400
-
+@blp.route('/reservation/<int:reservation_id>', methods=["DELETE"])
+def delete_reservation(reservation_id):
     session = get_session()
     try:
         reservation_service.delete_reservation(session, reservation_id)

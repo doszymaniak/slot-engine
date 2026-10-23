@@ -304,7 +304,7 @@ def test_delete_reservation_success(session, monkeypatch):
     )
     reservation_id = reservation.id
 
-    response = client.delete("/reservation/", json={"reservation_id": reservation_id})
+    response = client.delete(f"/reservation/{reservation_id}")
 
     assert response.status_code == 200
     assert response.json == {"message": "Reservation deleted successfully"}
@@ -315,8 +315,7 @@ def test_delete_reservation_rejects_missing_reservation(session, monkeypatch):
     client = configure_api_session(session, monkeypatch)
 
     response = client.delete(
-        "/reservation/",
-        json={"reservation_id": 999},
+        f"/reservation/999",
     )
 
     assert response.status_code == 400
