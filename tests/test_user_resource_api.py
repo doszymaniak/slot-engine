@@ -234,28 +234,20 @@ def test_delete_resource_success(session, monkeypatch):
     resource_id = resource.id
     client = configure_api(session, monkeypatch)
 
-    response = client.delete("/resource/", json={"id": resource_id})
+    response = client.delete(f"/resource/{resource_id}")
 
     assert response.status_code == 200
     assert response.json == {"message": "Resource deleted successfully"}
     assert client.get("/resource/").json == []
 
 
-@pytest.mark.parametrize(
-    ("payload", "message"),
-    [
-        ({}, "Resource id is required"),
-        ({"id": 999}, "Resource does not exist"),
-    ],
-)
-def test_delete_resource_rejects_missing_or_unknown_resource(
-    session, monkeypatch, payload, message):
+def test_delete_resource_rejects_unknown_resource(session, monkeypatch):
     client = configure_api(session, monkeypatch)
 
-    response = client.delete("/resource/", json=payload)
+    response = client.delete("/resource/999")
 
     assert response.status_code == 400
-    assert response.json == {"error": message}
+    assert response.json == {"error": "Resource does not exist"}
 
 
 def test_delete_resource_rejects_resource_with_reservations(session, monkeypatch):
@@ -271,7 +263,7 @@ def test_delete_resource_rejects_resource_with_reservations(session, monkeypatch
     )
     client = configure_api(session, monkeypatch)
 
-    response = client.delete("/resource/", json={"id": resource_id})
+    response = client.delete(f"/resource/{resource_id}")
 
     assert response.status_code == 400
     assert response.json == {

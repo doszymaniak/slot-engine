@@ -104,14 +104,8 @@ def create_resource():
         return jsonify({"error": str(error)}), 400
 
 
-@blp.route('/resource/', methods=["DELETE"])
-def delete_resource():
-    data = request.get_json() or {}
-    resource_id = data.get("id")
-
-    if resource_id is None:
-        return jsonify({"error": "Resource id is required"}), 400
-
+@blp.route('/resource/<int:resource_id>', methods=["DELETE"])
+def delete_resource(resource_id):
     session = get_session()
     try:
         resource_service.delete_resource(session, resource_id)
